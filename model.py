@@ -1,171 +1,78 @@
 import csv
 import operator
 from operator import itemgetter
-
+data_dict={}
 data_is_loaded = False
+
 def load_data():
-    model_list=[]
+
     with open('US_County_Level_Presidential_Results_12-16.csv', 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
+        reader = [tuple(row) for row in csv.reader(csvfile)]
         for row in reader:
             if row[9]=="AK":
                 pass
             elif row[0]=="":
                 pass
             else:
-                model_list.append(row)
-        data_is_loaded = True
-    return model_list  # process the data
+                if row[9] not in data_dict:
+                    data_dict[row[9]]=[float(row[2]),float(row[3]),float(row[4])]
+                elif row[9] in data_dict:
+                    abbre=row[9]
+                    dem_info=data_dict[abbre][0]
+                    gop_info=data_dict[abbre][1]
+                    info_total=data_dict[abbre][2]
+                    cal_dem=float(dem_info)+float(row[2])
+                    cal_gop=float(gop_info)+float(row[3])
+                    cal_total=float(info_total)+float(row[4])
+                    data_dict[abbre][0]=cal_dem
+                    data_dict[abbre][1]=cal_gop
+                    data_dict[abbre][2]=cal_total
+    global data_is_loaded
+    data_is_loaded = True
 
 def get_data(party="dem", raw=True, sort_ascending=True, year=2016):
+    global data_is_loaded
+    default_info=[]
     if not data_is_loaded:
             load_data()
-            #default=data1
-            if party=="dem" and raw==True and sort_ascending==True:
-                dem_cdict={}
-                for i in load_data():
-                    dem_votes=i[2]
-                    dem_abbre=i[9]
-                    if dem_abbre in dem_cdict:
-                        dem_cdict[dem_abbre]+= float(dem_votes)
-                    else:
-                        dem_cdict[dem_abbre] = float(dem_votes)
+    for i in data_dict:
 
-                dem_default=sorted(dem_cdict.items(), key=operator.itemgetter(1))
-                return dem_default
-            #data2
-            if party=="gop" and raw==True and sort_ascending==True:
-                gop_cdict = {}
-                for i in load_data():
-                    gop_abbre = i[9]
-                    gop_votes=i[3]
+        total_votes=data_dict[i][2]
+        if party=="dem":
+            votes=data_dict[i][0]
+        if party=="gop":
+            votes=data_dict[i][1]
+        if raw==True:
+            default_info.append((i,votes))
+        if raw==False:
+            percent=((float(votes)/float(total_votes)))*100
+            default_info.append((i,percent))
 
-                    if gop_abbre in gop_cdict:
-                        gop_cdict[gop_abbre] += float(gop_votes)
-                    else:
-                        gop_cdict[gop_abbre] = float(gop_votes)
-                gop_default = sorted(gop_cdict.items(), key=operator.itemgetter(1))
-                return gop_default
-            #data3
-            if party=="dem" and raw==False and sort_ascending==True:
-                dem_cdict_indi = {}
-                dem_cdict_total={}
-                for i in load_data():
-                    dem_abbre = i[9]
-                    dem_indi=float(i[2])
-                    dem_total = float(i[4])
-                    if dem_abbre in dem_cdict_indi:
-                        dem_cdict_indi[dem_abbre] += dem_indi
-                        dem_cdict_total[dem_abbre] += dem_total
-
-                    else:
-                        dem_cdict_indi[dem_abbre] = dem_indi
-                        dem_cdict_total[dem_abbre] = dem_total
-                dem = {dem: dem_cdict_indi[dem] / dem_cdict_total[dem] * 100 for dem in dem_cdict_indi}
-                demraw = sorted(dem.items(), key=operator.itemgetter(1))
-                return demraw
-
-            #data4
-            if party=="gop" and raw==False and sort_ascending==True:
-                gop_cdict_indi = {}
-                gop_cdict_total = {}
-                for i in load_data():
-                    gop_abbre = i[9]
-                    gop_indi = float(i[3])
-                    gop_total = float(i[4])
-
-                    if gop_abbre in gop_cdict_indi:
-                        gop_cdict_indi[gop_abbre] += gop_indi
-                        gop_cdict_total[gop_abbre] += gop_total
-
-                    else:
-                        gop_cdict_indi[gop_abbre] = gop_indi
-                        gop_cdict_total[gop_abbre] = gop_total
-                gopchange = {gop: gop_cdict_indi[gop] / gop_cdict_total[gop]*100 for gop in gop_cdict_indi}
-
-                gop_change = sorted(gopchange.items(), key=operator.itemgetter(1))
-                return gop_change
-            #data5
-            if party=="dem" and raw==True and sort_ascending==False:
-                dem_dict = {}
-                for i in load_data():
-                    dem_votes = i[2]
-                    dem_abbre = i[9]
-                    if dem_abbre in dem_dict:
-                        dem_dict[dem_abbre] += float(dem_votes)
-                    else:
-                        dem_dict[dem_abbre] = float(dem_votes)
-                dem_change = sorted(dem_dict.items(), key=operator.itemgetter(1),reverse=True)
-                return dem_change
-
-            #data6
-            if party == "gop" and raw == True and sort_ascending == False:
-                gop_cdict = {}
-                for i in load_data():
-                    gop_abbre = i[9]
-                    gop_votes = i[3]
-
-                    if gop_abbre in gop_cdict:
-                        gop_cdict[gop_abbre] += float(gop_votes)
-                    else:
-                        gop_cdict[gop_abbre] = float(gop_votes)
-                gop_default_sort = sorted(gop_cdict.items(), key=operator.itemgetter(1),reverse=True)
-                return gop_default_sort
-            #data7
-            if party=="gop" and raw==False and sort_ascending == False:
-                gop_cdict_indi = {}
-                gop_cdict_total = {}
-                for i in load_data():
-                    gop_abbre = i[9]
-                    gop_indi = float(i[3])
-                    gop_total = float(i[4])
-
-                    if gop_abbre in gop_cdict_indi:
-                        gop_cdict_indi[gop_abbre] += gop_indi
-                        gop_cdict_total[gop_abbre] += gop_total
-
-                    else:
-                        gop_cdict_indi[gop_abbre] = gop_indi
-                        gop_cdict_total[gop_abbre] = gop_total
-                gopchange = {gop: gop_cdict_indi[gop] / gop_cdict_total[gop]*100 for gop in gop_cdict_indi}
-
-                gop_raw = sorted(gopchange.items(), key=operator.itemgetter(1),reverse=True)
-                return gop_raw
-            # data8
-            if party=="dem" and raw==False and sort_ascending==False:
-                dem_cdict_indi = {}
-                dem_cdict_total={}
-                for i in load_data():
-                    dem_abbre = i[9]
-                    dem_indi=float(i[2])
-                    dem_total = float(i[4])
-                    if dem_abbre in dem_cdict_indi:
-                        dem_cdict_indi[dem_abbre] += dem_indi
-                        dem_cdict_total[dem_abbre] += dem_total
-
-                    else:
-                        dem_cdict_indi[dem_abbre] = dem_indi
-                        dem_cdict_total[dem_abbre] = dem_total
-                dem= {dem: dem_cdict_indi[dem] / dem_cdict_total[dem]*100 for dem in dem_cdict_indi}
-                dempercentage=sorted(dem.items(), key=operator.itemgetter(1),reverse=True)
-                return dempercentage
+    if sort_ascending==True:
+        sorted_list=sorted(default_info,key=itemgetter(1))
+    else:
+        sorted_list=sorted(default_info,key=itemgetter(1),reverse=True)
+    return(sorted_list)
 
 
-if __name__ == "__main__":
-
-    points = 0
-# #
-    data = get_data()
-    if data[0] == ('WY', 55949.0) and data[-1] == ('CA', 7362490.0):
-        points += 3.33
+# if __name__ == "__main__":
 #
-    data = get_data(party='gop', raw=False)
-    if data[0][0] == 'DC' and int(data[0][1]) == 4 and \
-                    data[-1][0] == 'WY' and int(data[-1][1]) == 70:
-        points += 3.33
+#     points = 0
 # # #
-    data = get_data(party='dem', raw=True, sort_ascending=False)
-    if data[0] == ('CA', 7362490.0) and data[-1] == ('WY', 55949.0):
-        points += 3.34
+#     data = get_data()
+#     if data[0] == ('WY', 55949.0) and data[-1] == ('CA', 7362490.0):
+#         points += 3.33
+#         print("1,ok")
 # #
-    print("points :", points)
+#     data = get_data(party='gop', raw=False)
+#     if data[0][0] == 'DC' and int(data[0][1]) == 4 and \
+#                     data[-1][0] == 'WY' and int(data[-1][1]) == 70:
+#         points += 3.33
+#         print("2,ok")
+# # # #
+#     data = get_data(party='dem', raw=True, sort_ascending=False)
+#     if data[0] == ('CA', 7362490.0) and data[-1] == ('WY', 55949.0):
+#         points += 3.34
+#         print("3,ok")
+# # #
+#     print("points :", points)
