@@ -23,107 +23,62 @@ data = model.get_data()
 
 
 bc1 = view.BarChart(rect=pygame.Rect(0, 50, 950, 700), ticks=5,max_val=10000000, plot_area_width_ratio=0.95,values=data)
-# bc3 = view.BarChart(rect=pygame.Rect(0, 50, 950, 700), ticks=5,max_val=100, plot_area_width_ratio=0.95,values=data)
 
 party="dem"
 max_val=10000000
 raw=True
 sort_ascending=True
-# de = None
 
-class PartyButton(Button):
-	def __init__ (self,text,rect,chart,demand):
+class OneButton(Button):
+	def __init__(self,text,rect,chart,demand):
 		Button.__init__(self,text,rect)
-		# self.default=True
-		self.party=demand
+		self.demand=demand
 		self.chart=chart
-
-		# pygame.draw.rect(surface, RED, self.rect)
-	def on_click(self,event):
-		global party
-		global raw
-		global sort_ascending
-		party=self.party
-		data = model.get_data(party=party,raw=raw,sort_ascending=sort_ascending)
-		self.chart.set_values(data)
-
-		# global de
-		# de = True
-	def draw(self, surface):
-		global party
-		if party == self.party:
-			color= RED
-
-		else:
-			color = GRAY
-		pygame.draw.rect(surface, color, self.rect)
-		font = pygame.font.Font(None, 36)
-		label_view = font.render(self.text, False, BLACK)
-		label_pos = label_view.get_rect()
-		label_pos.centery = self.rect.centery
-		label_pos.centerx = self.rect.centerx
-		surface.blit(label_view, label_pos)
-
-class UpdownButton(Button):
-	def __init__ (self,text,rect,chart,demand):
-		Button.__init__(self,text,rect)
-
-		self.sort_ascending=demand
-		self.chart=chart
-
-	def on_click(self,event):
-		global party
-		global raw
-		global sort_ascending
-		sort_ascending=self.sort_ascending
-		data = model.get_data(party=party,raw=raw,sort_ascending=sort_ascending)
-		self.chart.set_values(data)
-		# global de
-		# de = True
-	def draw(self, surface):
-		global sort_ascending
-		if sort_ascending == self.sort_ascending:
-			color= RED
-
-		else:
-			color = GRAY
-		pygame.draw.rect(surface, color, self.rect)
-		font = pygame.font.Font(None, 36)
-		label_view = font.render(self.text, False, BLACK)
-		label_pos = label_view.get_rect()
-		label_pos.centery = self.rect.centery
-		label_pos.centerx = self.rect.centerx
-		surface.blit(label_view, label_pos)
-
-class RawButton(Button):
-	def __init__ (self,text,rect,chart,demand):
-		Button.__init__(self,text,rect)
-		self.default=True
-		self.raw=demand
-		self.chart=chart
-
+		self.text=text
 	def on_click(self, event):
 		global party
 		global raw
 		global sort_ascending
-		# global de
-		# global max_val
-		raw=self.raw
-		data = model.get_data(party=party,raw=raw,sort_ascending=sort_ascending)
-		if self.raw==True:
-			self.chart.max_val=10000000
+		if self.demand=="dem" or self.demand=="gop":
+			#key step: let global variable changable according to the demand, the button you clicked every time
+			party=self.demand
+			data = model.get_data(party=party, raw=raw, sort_ascending=sort_ascending)
 			self.chart.set_values(data)
-		if self.raw== False:
-			self.chart.max_val = 100
-			self.chart.set_values(data)
+		if self.demand==True or self.demand==False:
+			if self.text=="Up" or self.text=="Down":
+				sort_ascending = self.demand
+				data = model.get_data(party=party, raw=raw, sort_ascending=sort_ascending)
+				self.chart.set_values(data)
+			else:
+				raw = self.demand
+				data = model.get_data(party=party, raw=raw, sort_ascending=sort_ascending)
+				if raw == True:
+					self.chart.max_val = 10000000
+					self.chart.set_values(data)
+				if raw == False:
+					self.chart.max_val = 100
+					self.chart.set_values(data)
 
 	def draw(self, surface):
+		global party
+		global sort_ascending
 		global raw
-		if raw == self.raw:
-			color = RED
-
-		else:
-			color = GRAY
+		if self.demand=="dem" or self.demand=="gop":
+			if party == self.demand:
+				color = RED
+			else:
+				color = GRAY
+		if self.demand == True or self.demand == False:
+			if self.text == "Up" or self.text == "Down":
+				if sort_ascending == self.demand:
+					color = RED
+				else:
+					color = GRAY
+			else:
+				if raw==self.demand:
+					color = RED
+				else:
+					color = GRAY
 		pygame.draw.rect(surface, color, self.rect)
 		font = pygame.font.Font(None, 36)
 		label_view = font.render(self.text, False, BLACK)
@@ -131,20 +86,14 @@ class RawButton(Button):
 		label_pos.centery = self.rect.centery
 		label_pos.centerx = self.rect.centerx
 		surface.blit(label_view, label_pos)
-		# if self.chart== bc3:
-		# 	de = False
-		# else:
-		# 	de = True
-			#bc1.draw(screen)
 
-button1= PartyButton("Dem",pygame.Rect(1000,  20, 100, 40),bc1,"dem")
-button2 = PartyButton("Gop", pygame.Rect(1000,  60, 100, 40),bc1,"gop")
-button3= UpdownButton("Up",pygame.Rect(1000,  120, 100, 40),bc1,True)
-button4= UpdownButton("Down",pygame.Rect(1000,  160, 100, 40),bc1,False)
-button5= RawButton("Raw",pygame.Rect(1000,  220, 100, 40),bc1,True)
-button6= RawButton("%",pygame.Rect(1000,  260, 100, 40),bc1,False)
+button1= OneButton("Dem",pygame.Rect(1000,  20, 100, 40),bc1,"dem")
+button2= OneButton("Gop", pygame.Rect(1000,  60, 100, 40),bc1,"gop")
+button3= OneButton("Up",pygame.Rect(1000,  120, 100, 40),bc1,True)
+button4= OneButton("Down",pygame.Rect(1000,  160, 100, 40),bc1,False)
+button5= OneButton("Raw",pygame.Rect(1000,  220, 100, 40),bc1,True)
+button6= OneButton("%",pygame.Rect(1000,  260, 100, 40),bc1,False)
 
-# display loop
 done = False
 while not done:
 	screen.fill((0,0,0))
@@ -165,9 +114,7 @@ while not done:
 			button5.handle_event(event)
 			button6.handle_event(event)
 
-	# if de == False:
-	# 	bc3.draw(screen)
-	# else:
+
 	bc1.draw(screen)
 
 
